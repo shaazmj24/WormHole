@@ -157,3 +157,22 @@ uvicorn app.main:app --reload
 You can view the database using DB Browser for SQLite.
 
 
+
+
+
+------------------------------------------------------------------------------------------------
+
+## Running with Docker
+
+Create a `.env` file based on `.env.example`, then run:
+
+```bash
+docker compose up --build 
+
+The stack contains a FastAPI application and a PostgreSQL database. The application uses PostgresTaskRepository, which implements the same repository interface as the previous in-memory and SQLite repositories. The service and route layers did not need to change.
+
+PostgreSQL data is stored in a named Docker volume. I verified persistence by creating a task, running docker compose down, restarting the stack with docker compose up, and confirming that the task still existed.
+
+
+
+

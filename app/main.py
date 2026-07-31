@@ -1,13 +1,10 @@
 from fastapi import FastAPI, HTTPException, Response, status
-
 from app.models import NewTask, Task, UpdateTask
-from app.repository.sqlite import SQLiteTaskRepository
+from app.repository.postgres import PostgresTaskRepository
 from app.service import TaskService  
-from app.database1 import initialize_database
 
 app = FastAPI()   
-initialize_database()
-repository = SQLiteTaskRepository() 
+repository = PostgresTaskRepository()
 service = TaskService(repository) 
 
 
