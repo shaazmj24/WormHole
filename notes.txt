@@ -22,4 +22,63 @@ Teams can work on different layers at the same time
 
 
 
-2. 
+2. how docker, postgres etc work together 
+Python App
+    │
+    │ reads DATABASE_URL
+    ▼
+psycopg driver
+    │
+    │ extracts:
+    │
+    │ username
+    │ password
+    │ host=db
+    │ port=5432
+    │ database=tasks_db
+    ▼
+Docker Network
+    │
+    │ routes traffic to the container named "db"
+    ▼
+PostgreSQL Server
+    │
+    ├── Is username valid?
+    ├── Is password correct?
+    ├── Does tasks_db exist?
+    ├── Does this user have permission?
+    ▼
+Connection established
+Docker is like a portable computer inside your computer.
+
+
+
+3. 
+-- Dockerfile builds one container. 
+Docker Compose connects and runs multiple containers.
+Image = frozen template/blueprint. Container = a running instance of that image (like a class vs an object).
+Dockerfile = builds one image (recipe for one dish). docker-compose.yml = orchestrates multiple containers together (the whole menu)
+
+-- Docker-compose pattern:
+services: lists your containers (e.g. api, db). Each service either build:s from a Dockerfile (your own app) or pulls a premade image: (like postgres:16 — no need to reinvent that). volumes: persist data (like a database's files) outside the container's lifecycle, 
+so data survives even if the container is deleted.
+
+-- What to containerize:
+Anything that runs as a process (API, database, cache, worker). One container = one job/responsibility — this gives independent scaling, independent 
+lifecycles (you change API code constantly, rarely touch DB setup), reuse of existing maintained images, and failure isolation.
+
+Handling heavy traffic:
+-- Horizontal scaling = run multiple identical containers of the same stateless image (e.g. FastAPI), with a load balancer (Nginx, cloud LB, Kubernetes) sitting in front deciding which container handles each request. 
+Works because FastAPI containers don't hold unique state — Postgres isn't scaled this way by default since copies would mean disconnected data.
+-- Vertical scaling = make one container/machine bigger instead. Has a ceiling and no redundancy.
+
+to run the applicarion or start containers: 
+1. use docker compose up --build when uve modified dockerfile or req.txt 
+2. or else use docker compose up
+
+
+Prompt for dockerising: 
+
+
+
+4. 
