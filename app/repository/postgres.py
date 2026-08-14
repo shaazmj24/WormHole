@@ -3,7 +3,7 @@ from app.database import get_connection
 
 class PostgresTaskRepository(TaskRepository):
 
-    def list_tasks(self) -> list[Task]:
+    def list_tasks(self, user_id: str) -> list[Task]:
         conn = get_connection()
 
         try:
@@ -11,9 +11,11 @@ class PostgresTaskRepository(TaskRepository):
                 cursor.execute(
                     """
                     SELECT id, title, done
-                    FROM tasks
+                    FROM tasks 
+                    WHERE user_id = %s 
                     ORDER BY id
-                    """
+                    """, 
+                    (user_id,), 
                 )
 
                 rows = cursor.fetchall()
@@ -30,7 +32,7 @@ class PostgresTaskRepository(TaskRepository):
         finally:
             conn.close()
 
-    def get_task(self, id: int) -> Task:
+    def get_task(self, id: int, user_id: str) -> Task:
         conn = get_connection()
 
         try:
@@ -39,9 +41,9 @@ class PostgresTaskRepository(TaskRepository):
                     """
                     SELECT id, title, done
                     FROM tasks
-                    WHERE id = %s
+                    WHERE id = %s AND user_id = %s
                     """,
-                    (id,),
+                    (id, user_id),
                 )
 
                 row = cursor.fetchone()
@@ -58,18 +60,19 @@ class PostgresTaskRepository(TaskRepository):
         finally:
             conn.close()
 
-    def add_task(self, new_task: NewTask) -> Task:
+    def add_task(self, new_task: NewTask , user_id: str) -> Task:
         conn = get_connection()
 
         try:
             with conn.cursor() as cursor:
                 cursor.execute(
                     """
-                    INSERT INTO tasks (title, done)
-                    VALUES (%s, %s)
+                    INSERT INTO tasks (user_id, title, done)
+                    VALUES (%s, %s, %s)
                     RETURNING id, title, done
                     """,
                     (
+                        user_id,
                         new_task.title,
                         new_task.done,
                     ),
@@ -89,9 +92,10 @@ class PostgresTaskRepository(TaskRepository):
             raise
 
         finally:
-            conn.close()
+            conn.close() 
+            
 
-    def replace_task(self, id: int, update: UpdateTask) -> Task:
+    def replace_task(self, id: int, update: UpdateTask, user_id: str) -> Task:
         conn = get_connection()
 
         try:
@@ -100,13 +104,14 @@ class PostgresTaskRepository(TaskRepository):
                     """
                     UPDATE tasks
                     SET title = %s, done = %s
-                    WHERE id = %s
+                    WHERE id = %s AND user_id = %s
                     RETURNING id, title, done
                     """,
                     (
                         update.title,
                         update.done,
-                        id,
+                        id, 
+                        user_id,
                     ),
                 )
 
@@ -128,9 +133,10 @@ class PostgresTaskRepository(TaskRepository):
             raise
 
         finally:
-            conn.close()
+            conn.close() 
+            
 
-    def delete_task(self, id: int) -> None:
+    def delete_task(self, id: int , user_id: str) -> None:
         conn = get_connection()
 
         try:
@@ -138,10 +144,10 @@ class PostgresTaskRepository(TaskRepository):
                 cursor.execute(
                     """
                     DELETE FROM tasks
-                    WHERE id = %s
+                    WHERE id = %s AND user_id = %s
                     RETURNING id
                     """,
-                    (id,),
+                    (id, user_id),
                 )
 
                 row = cursor.fetchone()

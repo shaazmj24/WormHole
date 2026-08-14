@@ -22,6 +22,7 @@ Teams can work on different layers at the same time
 
 
 
+
 2. how docker, postgres etc work together 
 Python App
     │
@@ -53,6 +54,9 @@ Docker is like a portable computer inside your computer.
 
 
 
+
+
+
 3. 
 -- Dockerfile builds one container. 
 Docker Compose connects and runs multiple containers.
@@ -81,4 +85,119 @@ Prompt for dockerising:
 
 
 
-4. 
+
+
+
+
+4. Authentication 
+   User logs in
+        │
+        ▼
+Frontend sends email/password
+        │
+        ▼
+Backend asks Supabase
+        │
+        ▼
+Supabase returns access token
+        │
+        ▼
+Backend returns token to frontend
+        │
+        ▼
+Frontend stores access token
+        │
+        ▼
+User clicks "My Tasks"
+        │
+        ▼
+Frontend reads access token
+        │
+        ▼
+Authorization: Bearer <token>
+        │
+        ▼
+Backend verifies token
+        │
+        ▼
+Backend gets user ID
+        │
+        ▼
+SELECT * FROM tasks WHERE user_id = current_user.id
+        │
+        ▼
+Backend returns only that user's tasks 
+
+
+A JWT (JSON Web Token) is a signed token used to prove a user's identity; 
+
+
+Access vs Refresh Token
+
+-- Access token:
+Short-lived
+Sent with protected API requests
+Identifies the logged-in user
+
+-- Refresh token: 
+Longer-lived
+Used to obtain a new access token
+Not normally sent with every API request
+
+
+-- Sessions vs JWT
+
+Traditional session:
+
+Client sends session ID
+        ↓
+Server looks up session
+        ↓
+session123 → User 5
+
+Server maintains session state, often in a database/Redis/memory.
+
+Stateless JWT:
+
+Client sends JWT
+       ↓
+Backend verifies JWT
+       ↓
+Backend identifies user
+
+Your FastAPI backend doesn't need to keep its own session record for every user.
+
+That's what stateless means here.
+
+
+-- public vs protected 
+
+Public route = anyone can access it. No login/token required.
+Protected route = user must be authenticated. A valid access token is required 
+
+Example public route:
+
+@app.get("/info")
+def info():
+    return {"message": "Hello"}
+
+Anyone can call:
+
+GET /info
+
+Example protected route:
+
+@app.get("/profile")
+def profile(user=Depends(get_current_user)):
+    return {"email": user.email}
+
+
+
+--- Authentication security: 
+Depends(get_current_user) checks that the person making the request is logged in using a valid JWT. Without it, anyone can call an endpoint 
+like DELETE /tasks/52 and potentially delete task ID 52 without logging in. But authentication alone is not enough: a malicious user could create their own account, log in normally, 
+and try to delete another user's task by guessing its ID. So the backend should check both authentication (are you logged in?) and authorization (does this task belong to you?). 
+Router-level Depends() helps by automatically requiring authentication for every route, so you don't accidentally leave one unprotected
+
+
+
