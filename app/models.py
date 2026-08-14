@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, field_validator , EmailStr
 
 
 class TaskTitle(BaseModel):                             #data validation and serialization
@@ -26,5 +26,10 @@ class UpdateTask(TaskTitle):
 class Task(TaskTitle):
     id: int = Field(ge=1)
     done: bool 
+    
+    
+class AuthRequest(BaseModel):
+    email: EmailStr
+    password: str
     
     
